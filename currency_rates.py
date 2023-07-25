@@ -11,7 +11,7 @@ url = "https://www.cbr.ru/scripts/XML_daily.asp"
 date_format = '%Y-%m-%d'
 
 if __name__ == '__main__':
-    if len(sys.argv) == 3:
+    if len(sys.argv) >= 3:
         if sys.argv[1].startswith('--code=') and sys.argv[2].startswith('--date='):
 
             code = sys.argv[1].replace('--code=', ' ').strip()
@@ -36,21 +36,25 @@ if __name__ == '__main__':
             }
             res = requests.get(url, params=params)
 
-            ans = ''
             if res:
                 xml = res.text
 
                 root_node = ET.fromstring(xml)
 
-                for valute in root_node.findall('Valute'):
-                    cur_code = valute.find('CharCode').text
-                    if cur_code == code:
-                        value = valute.find('Value').text
-                        name = valute.find('Name').text
-                        ans = f'{code} ({name}): {value}'
-                if ans == '':
-                    ans = 'Указан неверный код валюты'
-                print(ans)
+                if len(root_node) == 0:
+                    print('Данные за этот период отсутствуют')
+                else:
+                    ans = ''
+                    for valute in root_node.findall('Valute'):
+                        cur_code = valute.find('CharCode').text
+                        if cur_code == code:
+                            value = valute.find('Value').text
+                            name = valute.find('Name').text
+                            ans = f'{code} ({name}): {value}'
+                            break
+                    if ans == '':
+                        ans = 'Указан неверный код валюты'
+                    print(ans)
             else:
                 print(f'Ошибка сервера: {res.status_code}')
         else:
