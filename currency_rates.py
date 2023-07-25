@@ -10,26 +10,25 @@ guide = 'Утилита запускается в формате:\n'\
 url = "https://www.cbr.ru/scripts/XML_daily.asp"
 date_format = '%Y-%m-%d'
 
-if __name__ == '__main__':
-    if len(sys.argv) >= 3:
-        if sys.argv[1].startswith('--code=') and sys.argv[2].startswith('--date='):
 
-            code = sys.argv[1].replace('--code=', ' ').strip()
-            date_str = sys.argv[2].replace('--date=', ' ').strip()
+def parser(args):
+    if len(args) >= 3:
+        if args[1].startswith('--code=') and args[2].startswith('--date='):
+
+            code = args[1].replace('--code=', ' ').strip()
+            date_str = args[2].replace('--date=', ' ').strip()
             date = ''
 
             try:
                 date_obj = datetime.strptime(date_str, date_format)
 
                 if date_obj > datetime.today():
-                    print('Указанная дата еще не наступила')
-                    sys.exit()
+                    return 'Указанная дата еще не наступила'
 
                 date = date_obj.strftime('%d/%m/%Y')
 
             except ValueError:
-                print('Дата указаны в неверном формате, укажите дату в формате YYYY-MM-DD')
-                sys.exit()
+                return 'Дата указаны в неверном формате, укажите дату в формате YYYY-MM-DD'
 
             params = {
                 "date_req": date
@@ -42,7 +41,7 @@ if __name__ == '__main__':
                 root_node = ET.fromstring(xml)
 
                 if len(root_node) == 0:
-                    print('Данные за этот период отсутствуют')
+                    return 'Данные за этот период отсутствуют'
                 else:
                     ans = ''
                     for valute in root_node.findall('Valute'):
@@ -54,10 +53,15 @@ if __name__ == '__main__':
                             break
                     if ans == '':
                         ans = 'Указан неверный код валюты'
-                    print(ans)
+                    return ans
             else:
-                print(f'Ошибка сервера: {res.status_code}')
+                return f'Ошибка сервера: {res.status_code}'
         else:
-            print('Некорректно указаны параметры\n', guide)
+            return 'Некорректно указаны параметры\n' + guide
     else:
-        print(guide)
+        return guide
+
+
+if __name__ == '__main__':
+    result = parser(sys.argv)
+    print(result)
